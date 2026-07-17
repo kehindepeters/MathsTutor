@@ -6,10 +6,16 @@ no build step, no server, no internet, no accounts, and no ads.
 
 ## How to run it
 
-**On this computer**
-- Just double-click `index.html`. It opens in your browser and works straight away.
+**Play it online (easiest)**
+- Just open **https://kehindepeters.github.io/MathsTutor/** in any browser, on any device.
+- On a tablet or phone, then use the browser's **"Add to Home Screen"** option. It launches
+  full-screen like a real app, and remembers her progress on that device.
 
-**On a tablet or phone**
+**On this computer**
+- Just double-click `index.html`. It opens in your browser and works straight away — no
+  internet needed.
+
+**On a tablet or phone (without the link above)**
 1. Get the file onto the device. Easiest options:
    - Email `index.html` to yourself and open the attachment, **or**
    - Put it in a cloud folder (OneDrive/Google Drive) and open it from there, **or**
