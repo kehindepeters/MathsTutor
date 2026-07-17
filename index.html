@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="theme-color" content="#7c4dff" />
+<title>Maths Adventure!</title>
+<style>
+  :root {
+    --bg1: #ffe6a7;
+    --bg2: #ffd6e8;
+    --bg3: #d6f0ff;
+    --purple: #7c4dff;
+    --pink: #ff5fa2;
+    --green: #33cc77;
+    --red: #ff6b6b;
+    --yellow: #ffcf33;
+    --blue: #38b6ff;
+    --ink: #3a2a5d;
+    --card: #ffffff;
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: 'Comic Sans MS', 'Baloo 2', 'Trebuchet MS', system-ui, sans-serif;
+    color: var(--ink);
+    overflow: hidden;
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  body {
+    background: linear-gradient(135deg, var(--bg1), var(--bg2) 45%, var(--bg3));
+    background-attachment: fixed;
+  }
+
+  #app {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    max-width: 720px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .screen {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 14px;
+    animation: fadein .3s ease;
+  }
+  .hidden { display: none !important; }
+
+  @keyframes fadein { from { opacity: 0; transform: scale(.98); } to { opacity: 1; transform: scale(1); } }
+
+  /* ---------- Buttons ---------- */
+  .btn {
+    border: none;
+    border-radius: 22px;
+    font-family: inherit;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 5px 0 rgba(0,0,0,.15);
+    transition: transform .08s, box-shadow .08s, filter .15s;
+    color: #fff;
+    font-size: clamp(18px, 5vw, 26px);
+    padding: 16px 22px;
+  }
+  .btn:active { transform: translateY(4px); box-shadow: 0 1px 0 rgba(0,0,0,.15); }
+  .btn.big { font-size: clamp(22px, 6vw, 30px); padding: 20px; }
+  .btn-purple { background: var(--purple); }
+  .btn-pink { background: var(--pink); }
+  .btn-green { background: var(--green); }
+  .btn-blue { background: var(--blue); }
+  .btn-yellow { background: var(--yellow); color: var(--ink); }
+
+  /* ---------- Welcome screen ---------- */
+  #welcome {
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    gap: 18px;
+  }
+  #welcome h1 {
+    font-size: clamp(34px, 11vw, 62px);
+    margin: 0;
+    color: var(--purple);
+    text-shadow: 3px 3px 0 #fff, 6px 6px 0 rgba(124,77,255,.2);
+    line-height: 1.05;
+  }
+  .rainbow span { display: inline-block; animation: bob 1.6s ease-in-out infinite; }
+  .rainbow span:nth-child(2){ animation-delay:.1s } .rainbow span:nth-child(3){ animation-delay:.2s }
+  .rainbow span:nth-child(4){ animation-delay:.3s } .rainbow span:nth-child(5){ animation-delay:.4s }
+  @keyframes bob { 0%,100%{ transform: translateY(0) } 50%{ transform: translateY(-12px) } }
+
+  #welcome p { font-size: clamp(16px, 4.5vw, 22px); margin: 0; opacity: .8; }
+  #nameInput {
+    font-family: inherit;
+    font-size: clamp(20px, 6vw, 28px);
+    text-align: center;
+    padding: 16px 20px;
+    border-radius: 20px;
+    border: 4px solid var(--purple);
+    width: min(360px, 82vw);
+    color: var(--ink);
+    outline: none;
+    background: #fff;
+  }
+  .mascot-big { font-size: clamp(70px, 22vw, 130px); animation: bob 2.2s ease-in-out infinite; }
+
+  /* ---------- Top bar ---------- */
+  #topbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+  }
+  .greet { font-size: clamp(16px, 4.5vw, 22px); font-weight: bold; margin-right: auto; }
+  .stat {
+    background: #fff;
+    border-radius: 999px;
+    padding: 6px 12px;
+    font-size: clamp(15px, 4vw, 20px);
+    font-weight: bold;
+    box-shadow: 0 3px 0 rgba(0,0,0,.1);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+  }
+  .stat.pop { animation: pop .4s ease; }
+  @keyframes pop { 0%{ transform: scale(1) } 40%{ transform: scale(1.35) } 100%{ transform: scale(1) } }
+
+  .iconbtn {
+    background: #fff;
+    border: none;
+    border-radius: 999px;
+    width: 46px; height: 46px;
+    font-size: 24px;
+    cursor: pointer;
+    box-shadow: 0 3px 0 rgba(0,0,0,.1);
+  }
+  .iconbtn:active { transform: translateY(2px); }
+
+  /* ---------- Progress / treasure bar ---------- */
+  #progressWrap {
+    background: #fff;
+    border-radius: 999px;
+    height: 26px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,.12);
+    margin-bottom: 10px;
+  }
+  #progressBar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--yellow), var(--green));
+    border-radius: 999px;
+    transition: width .5s ease;
+  }
+  #progressGoal {
+    position: absolute;
+    right: 8px; top: 50%;
+    transform: translateY(-50%);
+    font-size: 20px;
+  }
+
+  /* ---------- Pet ---------- */
+  #petArea {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 6px;
+  }
+  #pet { font-size: clamp(44px, 13vw, 72px); transition: transform .3s; }
+  #pet.happy { animation: wiggle .5s ease; }
+  @keyframes wiggle { 0%,100%{ transform: rotate(0) } 25%{ transform: rotate(-12deg) scale(1.1) } 75%{ transform: rotate(12deg) scale(1.1) } }
+  #petLevel { font-size: 14px; opacity: .7; font-weight: bold; }
+
+  /* ---------- Question card ---------- */
+  #playArea { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+  #questionCard {
+    background: var(--card);
+    border-radius: 30px;
+    padding: 12px;
+    box-shadow: 0 8px 0 rgba(0,0,0,.08);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    flex: 1;
+    min-height: 0;
+    margin-bottom: 10px;
+  }
+  #streakBadge {
+    font-size: clamp(15px, 4vw, 20px);
+    font-weight: bold;
+    color: var(--pink);
+    min-height: 26px;
+  }
+  #question {
+    font-size: clamp(40px, 13vw, 74px);
+    font-weight: bold;
+    color: var(--ink);
+    margin: 4px 0;
+  }
+  #visualAid {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    min-height: 0;
+    margin: 4px 0;
+  }
+  .dotGroup {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    justify-content: center;
+    max-width: 44%;
+    padding: 8px;
+    border-radius: 18px;
+    background: rgba(124,77,255,.08);
+  }
+  .dot { font-size: clamp(18px, 5vw, 30px); animation: drop .3s ease backwards; }
+  @keyframes drop { from { transform: translateY(-14px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  .op { font-size: clamp(30px, 9vw, 50px); font-weight: bold; color: var(--purple); }
+
+  /* ---------- Answers ---------- */
+  #answers {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .answer {
+    background: #fff;
+    border: 4px solid var(--purple);
+    color: var(--purple);
+    border-radius: 24px;
+    font-family: inherit;
+    font-weight: bold;
+    font-size: clamp(26px, 8vw, 40px);
+    padding: 18px 8px;
+    cursor: pointer;
+    box-shadow: 0 5px 0 rgba(124,77,255,.25);
+    transition: transform .08s;
+  }
+  .answer:active { transform: translateY(4px); box-shadow: 0 1px 0 rgba(124,77,255,.25); }
+  .answer.correct { background: var(--green); border-color: var(--green); color: #fff; animation: pop .4s; }
+  .answer.wrong { background: var(--red); border-color: var(--red); color: #fff; animation: shake .4s; }
+  .answer.reveal { background: var(--green); border-color: var(--green); color: #fff; }
+  .answer:disabled { cursor: default; }
+  @keyframes shake { 0%,100%{ transform: translateX(0) } 20%{ transform: translateX(-8px) } 40%{ transform: translateX(8px) } 60%{ transform: translateX(-6px) } 80%{ transform: translateX(6px) } }
+
+  /* ---------- Feedback splash ---------- */
+  #splash {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    z-index: 30;
+  }
+  #splashText {
+    font-size: clamp(40px, 13vw, 80px);
+    font-weight: bold;
+    color: var(--green);
+    text-shadow: 3px 3px 0 #fff, 5px 5px 0 rgba(0,0,0,.15);
+    opacity: 0;
+  }
+  #splashText.show { animation: splash 1s ease; }
+  @keyframes splash { 0%{ opacity:0; transform: scale(.4) rotate(-8deg) } 30%{ opacity:1; transform: scale(1.15) rotate(4deg) } 70%{ opacity:1; transform: scale(1) } 100%{ opacity:0; transform: scale(1.05) } }
+
+  /* ---------- Modal (sticker book / rewards / parent) ---------- */
+  .modal {
+    position: absolute;
+    inset: 0;
+    background: rgba(58,42,93,.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 40;
+    padding: 16px;
+  }
+  .modalCard {
+    background: #fff;
+    border-radius: 28px;
+    padding: 20px;
+    width: 100%;
+    max-width: 460px;
+    max-height: 88%;
+    overflow-y: auto;
+    text-align: center;
+    box-shadow: 0 12px 30px rgba(0,0,0,.3);
+  }
+  .modalCard h2 { color: var(--purple); font-size: clamp(24px, 7vw, 34px); margin: 4px 0 12px; }
+  .stickerGrid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin: 10px 0;
+  }
+  .stickerCell {
+    aspect-ratio: 1;
+    border-radius: 18px;
+    background: #f0ecfb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: clamp(26px, 9vw, 40px);
+    box-shadow: inset 0 2px 5px rgba(0,0,0,.08);
+  }
+  .stickerCell.locked { filter: grayscale(1); opacity: .35; }
+  .stickerCell.justwon { animation: pop .6s ease; }
+
+  .rewardBig { font-size: clamp(80px, 26vw, 150px); animation: bob 1.6s ease-in-out infinite; }
+
+  .parentRow { text-align: left; margin: 10px 0; font-size: 16px; line-height: 1.5; }
+  .parentRow b { color: var(--purple); }
+
+  /* confetti */
+  .confetti {
+    position: absolute;
+    width: 12px; height: 12px;
+    top: -20px;
+    z-index: 35;
+    border-radius: 2px;
+    pointer-events: none;
+  }
+  @keyframes fall { to { transform: translateY(110vh) rotate(720deg); opacity: 1; } }
+
+  .footbtns { display: flex; gap: 10px; margin-top: 8px; }
+  .footbtns .btn { flex: 1; }
+
+  .tinylink { font-size: 13px; opacity: .5; text-decoration: underline; cursor: pointer; background: none; border: none; font-family: inherit; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- WELCOME -->
+  <section id="welcome" class="screen">
+    <div class="mascot-big">🦊</div>
+    <h1 class="rainbow"><span>Maths</span> <span>Adventure!</span></h1>
+    <p>What's your name, superstar?</p>
+    <input id="nameInput" maxlength="12" placeholder="Type your name" autocomplete="off" />
+    <button id="startBtn" class="btn btn-purple big">Let's Play! 🚀</button>
+    <button id="resetAll" class="tinylink">start over</button>
+  </section>
+
+  <!-- GAME -->
+  <section id="game" class="screen hidden">
+    <div id="topbar">
+      <span class="greet" id="greet">Hi!</span>
+      <span class="stat" id="coinStat">🪙 <span id="coins">0</span></span>
+      <span class="stat" id="starStat">⭐ <span id="stars">0</span></span>
+      <button class="iconbtn" id="bookBtn" title="Sticker book">📖</button>
+      <button class="iconbtn" id="parentBtn" title="Grown-ups">⚙️</button>
+    </div>
+
+    <div id="progressWrap">
+      <div id="progressBar"></div>
+      <span id="progressGoal">🏆</span>
+    </div>
+
+    <div id="petArea">
+      <span id="pet">🥚</span>
+      <span id="petLevel">Baby</span>
+    </div>
+
+    <div id="playArea">
+      <div id="questionCard">
+        <div id="streakBadge"></div>
+        <div id="visualAid"></div>
+        <div id="question">3 + 2 = ?</div>
+      </div>
+      <div id="answers"></div>
+    </div>
+
+    <div id="splash"><div id="splashText"></div></div>
+  </section>
+
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  // ---------------- State ----------------
+  var SAVE_KEY = "mathsAdventureSave_v1";
+  var state = {
+    name: "",
+    coins: 0,
+    stars: 0,
+    streak: 0,
+    bestStreak: 0,
+    level: 1,          // 1..6 difficulty
+    correctCount: 0,
+    wrongCount: 0,
+    totalAnswered: 0,
+    petXP: 0,          // grows the pet
+    progress: 0,       // 0..GOAL toward treasure
+    stickers: [],      // indices unlocked
+    recent: []         // recent correct/wrong for adaptive
+  };
+
+  var GOAL = 10;                     // correct answers to reach the treasure
+  var PET_STAGES = [                 // grows with petXP
+    { xp: 0,   emoji: "🥚", name: "Egg" },
+    { xp: 6,   emoji: "🐣", name: "Hatchling" },
+    { xp: 15,  emoji: "🐥", name: "Chick" },
+    { xp: 28,  emoji: "🐤", name: "Birdie" },
+    { xp: 45,  emoji: "🦜", name: "Parrot" },
+    { xp: 70,  emoji: "🦅", name: "Eagle" },
+    { xp: 100, emoji: "🐉", name: "Dragon!" }
+  ];
+  var STICKERS = ["🌈","🦄","⭐","🍦","🐱","🚀","🌸","🎈","🐢","🍭","⚽","🎨","🦕","🌟","🍩","🐬"];
+  var STICKER_EVERY = 15;            // unlock a sticker every N correct answers
+  var TREASURES = ["🏆","🎁","💎","👑","🍫","🧸","🎠","🪁"];
+
+  // ---------------- Elements ----------------
+  var $ = function (id) { return document.getElementById(id); };
+  var welcome = $("welcome"), game = $("game");
+  var nameInput = $("nameInput"), startBtn = $("startBtn");
+  var greet = $("greet"), coinsEl = $("coins"), starsEl = $("stars");
+  var coinStat = $("coinStat"), starStat = $("starStat");
+  var progressBar = $("progressBar"), progressGoal = $("progressGoal");
+  var pet = $("pet"), petLevel = $("petLevel");
+  var questionEl = $("question"), answersEl = $("answers");
+  var streakBadge = $("streakBadge"), visualAid = $("visualAid");
+  var splashText = $("splashText");
+
+  var current = null;   // current question {a,b,op,answer}
+  var locked = false;   // prevent double answering
+
+  // ---------------- Sound (Web Audio, no files) ----------------
+  var actx = null;
+  function audio() {
+    if (!actx) { try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} }
+    return actx;
+  }
+  function tone(freq, start, dur, type, vol) {
+    var ac = audio(); if (!ac) return;
+    var o = ac.createOscillator(), g = ac.createGain();
+    o.type = type || "sine";
+    o.frequency.value = freq;
+    var t = ac.currentTime + start;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(vol || 0.2, t + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(ac.destination);
+    o.start(t); o.stop(t + dur + 0.02);
+  }
+  function sndCorrect() { tone(523,0,.12,"triangle",.25); tone(659,.1,.12,"triangle",.25); tone(784,.2,.18,"triangle",.25); }
+  function sndWrong()   { tone(300,0,.15,"sine",.18); tone(220,.12,.2,"sine",.18); }
+  function sndReward()  { [523,659,784,1046].forEach(function(f,i){ tone(f, i*.12, .2, "triangle", .28); }); }
+  function sndClick()   { tone(440,0,.05,"square",.12); }
+
+  // ---------------- Persistence ----------------
+  function save() {
+    try { localStorage.setItem(SAVE_KEY, JSON.stringify(state)); } catch (e) {}
+  }
+  function load() {
+    try {
+      var raw = localStorage.getItem(SAVE_KEY);
+      if (raw) { var s = JSON.parse(raw); for (var k in s) if (state.hasOwnProperty(k)) state[k] = s[k]; }
+    } catch (e) {}
+  }
+
+  // ---------------- Question generation ----------------
+  function rnd(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+
+  // Difficulty by level: caps the maximum total, chooses +/-
+  function levelConfig(lvl) {
+    // max = biggest number involved / result
+    var cfg = {
+      1: { max: 5,  sub: false },
+      2: { max: 10, sub: false },
+      3: { max: 10, sub: true  },
+      4: { max: 15, sub: true  },
+      5: { max: 20, sub: true  },
+      6: { max: 20, sub: true  }
+    };
+    return cfg[lvl] || cfg[6];
+  }
+
+  function makeQuestion() {
+    var cfg = levelConfig(state.level);
+    var op, a, b, ans;
+    var useSub = cfg.sub && Math.random() < 0.45;
+    if (useSub) {
+      op = "−";
+      a = rnd(1, cfg.max);
+      b = rnd(0, a);           // no negative answers
+      ans = a - b;
+    } else {
+      op = "+";
+      var total = rnd(1, cfg.max);
+      a = rnd(0, total);
+      b = total - a;
+      ans = total;
+    }
+    // decide if we show visual dots (more often at easier levels)
+    var showVisual = (a + b) <= 12 && Math.random() < (state.level <= 2 ? 0.75 : 0.35);
+    return { a: a, b: b, op: op, answer: ans, visual: showVisual };
+  }
+
+  // build 4 answer options including the correct one
+  function makeOptions(answer, cfg) {
+    var opts = [answer];
+    var guard = 0;
+    while (opts.length < 4 && guard++ < 50) {
+      var delta = rnd(-3, 3);
+      if (delta === 0) continue;
+      var cand = answer + delta;
+      if (cand < 0 || cand > cfg.max + 3) continue;
+      if (opts.indexOf(cand) === -1) opts.push(cand);
+    }
+    // fallback fill
+    var f = 0;
+    while (opts.length < 4) { if (opts.indexOf(f) === -1) opts.push(f); f++; }
+    // shuffle
+    for (var i = opts.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = opts[i]; opts[i] = opts[j]; opts[j] = t;
+    }
+    return opts;
+  }
+
+  // ---------------- Rendering ----------------
+  function renderStats() {
+    coinsEl.textContent = state.coins;
+    starsEl.textContent = state.stars;
+    greet.textContent = "Hi " + (state.name || "friend") + "! 👋";
+    renderPet();
+    renderProgress();
+  }
+
+  function petStage() {
+    var stage = PET_STAGES[0];
+    for (var i = 0; i < PET_STAGES.length; i++) if (state.petXP >= PET_STAGES[i].xp) stage = PET_STAGES[i];
+    return stage;
+  }
+  function renderPet() {
+    var s = petStage();
+    pet.textContent = s.emoji;
+    petLevel.textContent = s.name;
+  }
+  function renderProgress() {
+    var pct = Math.min(100, (state.progress / GOAL) * 100);
+    progressBar.style.width = pct + "%";
+    progressGoal.textContent = TREASURES[state.stars % TREASURES.length];
+  }
+
+  function renderVisual(q) {
+    visualAid.innerHTML = "";
+    if (!q.visual) return;
+    var g1 = document.createElement("div"); g1.className = "dotGroup";
+    var shapes = ["🔵","🟣","🟢","🟠","🔴","🟡"];
+    var shape = shapes[rnd(0, shapes.length - 1)];
+    for (var i = 0; i < q.a; i++) { var d = document.createElement("span"); d.className = "dot"; d.textContent = shape; d.style.animationDelay = (i*0.04)+"s"; g1.appendChild(d); }
+    visualAid.appendChild(g1);
+    var op = document.createElement("div"); op.className = "op"; op.textContent = q.op; visualAid.appendChild(op);
+    var g2 = document.createElement("div"); g2.className = "dotGroup";
+    var shape2 = shapes[rnd(0, shapes.length - 1)];
+    for (var j = 0; j < q.b; j++) { var d2 = document.createElement("span"); d2.className = "dot"; d2.textContent = shape2; d2.style.animationDelay = (j*0.04)+"s"; g2.appendChild(d2); }
+    visualAid.appendChild(g2);
+  }
+
+  function renderStreak() {
+    if (state.streak >= 2) {
+      streakBadge.textContent = state.streak + " in a row! 🔥";
+    } else {
+      streakBadge.textContent = "";
+    }
+  }
+
+  function nextQuestion() {
+    locked = false;
+    current = makeQuestion();
+    var cfg = levelConfig(state.level);
+    questionEl.textContent = current.a + " " + current.op + " " + current.b + " = ?";
+    renderVisual(current);
+    renderStreak();
+    var opts = makeOptions(current.answer, cfg);
+    answersEl.innerHTML = "";
+    opts.forEach(function (val) {
+      var b = document.createElement("button");
+      b.className = "answer";
+      b.textContent = val;
+      b.addEventListener("click", function () { onAnswer(b, val); });
+      answersEl.appendChild(b);
+    });
+  }
+
+  // ---------------- Answer handling ----------------
+  var ENCOURAGE = ["Great job", "Awesome", "Brilliant", "Well done", "Superstar", "Amazing", "You rock", "Fantastic", "Wonderful", "Nice work"];
+  var TRYAGAIN = ["Good try!", "Almost!", "So close!", "Keep going!", "You've got this!"];
+
+  function onAnswer(btn, val) {
+    if (locked) return;
+    locked = true;
+    state.totalAnswered++;
+
+    if (val === current.answer) {
+      // CORRECT
+      btn.classList.add("correct");
+      sndCorrect();
+      state.coins += 5;
+      state.correctCount++;
+      state.streak++;
+      if (state.streak > state.bestStreak) state.bestStreak = state.streak;
+      state.petXP += 2;
+      state.progress++;
+      state.recent.push(1); if (state.recent.length > 6) state.recent.shift();
+
+      pet.classList.remove("happy"); void pet.offsetWidth; pet.classList.add("happy");
+      bump(coinStat);
+
+      var msg = ENCOURAGE[Math.floor(Math.random()*ENCOURAGE.length)] + ", " + (state.name||"friend") + "! ⭐";
+      showSplash(msg, "var(--green)");
+
+      maybeSticker();
+      adapt(true);
+      renderStats();
+      save();
+
+      if (state.progress >= GOAL) {
+        setTimeout(reachTreasure, 700);
+      } else {
+        setTimeout(nextQuestion, 950);
+      }
+    } else {
+      // WRONG - gentle, then reveal
+      btn.classList.add("wrong");
+      sndWrong();
+      state.streak = 0;
+      state.wrongCount++;
+      state.recent.push(0); if (state.recent.length > 6) state.recent.shift();
+      showSplash(TRYAGAIN[Math.floor(Math.random()*TRYAGAIN.length)], "var(--pink)");
+      renderStreak();
+      // reveal the correct answer so she is never stuck
+      var buttons = answersEl.querySelectorAll(".answer");
+      buttons.forEach(function (b) {
+        b.disabled = true;
+        if (parseInt(b.textContent, 10) === current.answer) b.classList.add("reveal");
+      });
+      adapt(false);
+      save();
+      setTimeout(nextQuestion, 1900);
+    }
+  }
+
+  // adaptive difficulty based on recent performance
+  function adapt(wasCorrect) {
+    var recent = state.recent;
+    var correctInRow = 0;
+    for (var i = recent.length - 1; i >= 0; i--) { if (recent[i] === 1) correctInRow++; else break; }
+    var wrongInRow = 0;
+    for (var k = recent.length - 1; k >= 0; k--) { if (recent[k] === 0) wrongInRow++; else break; }
+
+    if (wasCorrect && correctInRow >= 4 && state.level < 6) {
+      state.level++;
+      state.recent = [];
+      setTimeout(function(){ showSplash("Level Up! 🎉", "var(--purple)"); sndReward(); }, 1000);
+    } else if (!wasCorrect && wrongInRow >= 3 && state.level > 1) {
+      state.level--;
+      state.recent = [];
+    }
+  }
+
+  function maybeSticker() {
+    var earned = Math.floor(state.correctCount / STICKER_EVERY);
+    var have = state.stickers.length;
+    if (earned > have && have < STICKERS.length) {
+      state.stickers.push(have); // unlock next in order
+      state.stars++;
+      bump(starStat);
+      setTimeout(function () { celebrateSticker(STICKERS[have]); }, 1000);
+    }
+  }
+
+  // ---------------- Treasure (goal reached) ----------------
+  function reachTreasure() {
+    state.progress = 0;
+    state.stars++;
+    state.coins += 20;
+    state.petXP += 5;
+    bump(starStat);
+    save();
+    sndReward();
+    confettiBurst();
+    var treasure = TREASURES[rnd(0, TREASURES.length - 1)];
+    showModal(
+      '<h2>Treasure Found! 🎉</h2>' +
+      '<div class="rewardBig">' + treasure + '</div>' +
+      '<p style="font-size:20px">Amazing, ' + esc(state.name || "friend") + '!<br>You earned <b>⭐ a star</b> and <b>🪙 20 coins</b>!</p>' +
+      '<div class="footbtns"><button class="btn btn-green big" id="keepGoing">Keep Playing! 🚀</button></div>'
+    );
+    $("keepGoing").addEventListener("click", function () { closeModal(); renderStats(); nextQuestion(); });
+    renderStats();
+  }
+
+  function celebrateSticker(sticker) {
+    confettiBurst();
+    sndReward();
+    showModal(
+      '<h2>New Sticker! ✨</h2>' +
+      '<div class="rewardBig">' + sticker + '</div>' +
+      '<p style="font-size:20px">You unlocked a sticker for your book, ' + esc(state.name||"friend") + '!</p>' +
+      '<div class="footbtns"><button class="btn btn-purple big" id="stickerOk">Yay! 🎉</button></div>'
+    );
+    $("stickerOk").addEventListener("click", function () { closeModal(); });
+  }
+
+  // ---------------- Splash + effects ----------------
+  function showSplash(text, color) {
+    splashText.textContent = text;
+    splashText.style.color = color || "var(--green)";
+    splashText.classList.remove("show"); void splashText.offsetWidth; splashText.classList.add("show");
+  }
+  function bump(el) { el.classList.remove("pop"); void el.offsetWidth; el.classList.add("pop"); }
+
+  function confettiBurst() {
+    var colors = ["#ff5fa2","#ffcf33","#33cc77","#38b6ff","#7c4dff","#ff6b6b"];
+    for (var i = 0; i < 40; i++) {
+      (function () {
+        var c = document.createElement("div");
+        c.className = "confetti";
+        c.style.left = Math.random() * 100 + "%";
+        c.style.background = colors[Math.floor(Math.random()*colors.length)];
+        c.style.animation = "fall " + (1.2 + Math.random()*1.3) + "s linear forwards";
+        c.style.animationDelay = (Math.random()*0.4) + "s";
+        c.style.opacity = "0";
+        document.getElementById("app").appendChild(c);
+        setTimeout(function(){ if (c.parentNode) c.parentNode.removeChild(c); }, 3200);
+      })();
+    }
+  }
+
+  // ---------------- Modals ----------------
+  var modalEl = null;
+  function showModal(html) {
+    closeModal();
+    modalEl = document.createElement("div");
+    modalEl.className = "modal";
+    modalEl.innerHTML = '<div class="modalCard">' + html + '</div>';
+    document.getElementById("app").appendChild(modalEl);
+  }
+  function closeModal() { if (modalEl && modalEl.parentNode) modalEl.parentNode.removeChild(modalEl); modalEl = null; }
+
+  function openBook() {
+    sndClick();
+    var cells = "";
+    for (var i = 0; i < STICKERS.length; i++) {
+      var have = state.stickers.indexOf(i) !== -1;
+      cells += '<div class="stickerCell ' + (have ? "" : "locked") + '">' + (have ? STICKERS[i] : "❔") + '</div>';
+    }
+    var next = state.stickers.length < STICKERS.length
+      ? ((state.correctCount % STICKER_EVERY === 0 && state.correctCount>0) ? 0 : (STICKER_EVERY - (state.correctCount % STICKER_EVERY)))
+      : 0;
+    var hint = state.stickers.length < STICKERS.length
+      ? '<p style="font-size:16px;opacity:.8">Get <b>' + next + '</b> more right to earn the next sticker!</p>'
+      : '<p style="font-size:16px;opacity:.8">You collected them ALL! 🌟</p>';
+    showModal(
+      '<h2>My Sticker Book 📖</h2>' +
+      '<p style="font-size:16px">Stickers: <b>' + state.stickers.length + ' / ' + STICKERS.length + '</b></p>' +
+      '<div class="stickerGrid">' + cells + '</div>' +
+      hint +
+      '<div class="footbtns"><button class="btn btn-purple big" id="closeBook">Close</button></div>'
+    );
+    $("closeBook").addEventListener("click", closeModal);
+  }
+
+  function openParent() {
+    sndClick();
+    var acc = state.totalAnswered ? Math.round((state.correctCount / state.totalAnswered) * 100) : 0;
+    var levelNames = {1:"Add within 5",2:"Add within 10",3:"Add & subtract within 10",4:"within 15",5:"within 20",6:"within 20 (mixed)"};
+    showModal(
+      '<h2>Grown-ups ⚙️</h2>' +
+      '<div class="parentRow">' +
+        '<div><b>Player:</b> ' + esc(state.name||"—") + '</div>' +
+        '<div><b>Questions answered:</b> ' + state.totalAnswered + '</div>' +
+        '<div><b>Correct:</b> ' + state.correctCount + ' (' + acc + '%)</div>' +
+        '<div><b>Best streak:</b> ' + state.bestStreak + '</div>' +
+        '<div><b>Current level:</b> ' + levelNames[state.level] + '</div>' +
+        '<div><b>Coins:</b> 🪙 ' + state.coins + '  &nbsp; <b>Stars:</b> ⭐ ' + state.stars + '</div>' +
+        '<div><b>Stickers:</b> ' + state.stickers.length + ' / ' + STICKERS.length + '</div>' +
+      '</div>' +
+      '<div class="footbtns">' +
+        '<button class="btn btn-blue" id="changeName">Change name</button>' +
+        '<button class="btn btn-yellow" id="closeParent">Close</button>' +
+      '</div>' +
+      '<div class="footbtns">' +
+        '<button class="btn btn-pink" id="resetProgress">Reset all progress</button>' +
+      '</div>'
+    );
+    $("closeParent").addEventListener("click", closeModal);
+    $("changeName").addEventListener("click", function () {
+      closeModal(); game.classList.add("hidden"); welcome.classList.remove("hidden");
+      nameInput.value = state.name || "";
+      nameInput.focus();
+    });
+    $("resetProgress").addEventListener("click", function () {
+      if (confirm("Reset ALL progress, coins, stars and stickers?")) {
+        try { localStorage.removeItem(SAVE_KEY); } catch (e) {}
+        location.reload();
+      }
+    });
+  }
+
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"})[c]; }); }
+
+  // ---------------- Flow ----------------
+  function startGame() {
+    var nm = nameInput.value.trim();
+    if (nm) state.name = nm;
+    if (!state.name) state.name = "Superstar";
+    audio(); // unlock audio on user gesture
+    save();
+    welcome.classList.add("hidden");
+    game.classList.remove("hidden");
+    renderStats();
+    nextQuestion();
+  }
+
+  startBtn.addEventListener("click", startGame);
+  nameInput.addEventListener("keydown", function (e) { if (e.key === "Enter") startGame(); });
+  $("bookBtn").addEventListener("click", openBook);
+  $("parentBtn").addEventListener("click", openParent);
+  $("resetAll").addEventListener("click", function () {
+    if (confirm("Start completely over? This clears saved progress.")) {
+      try { localStorage.removeItem(SAVE_KEY); } catch (e) {}
+      location.reload();
+    }
+  });
+
+  // ---------------- Init ----------------
+  load();
+  if (state.name) {
+    nameInput.value = state.name;
+  }
+  renderStats();
+  // If a returning player, jump straight in? Keep welcome so she can confirm/change name.
+  // Prefill and let her tap Play.
+
+})();
+</script>
+</body>
+</html>
